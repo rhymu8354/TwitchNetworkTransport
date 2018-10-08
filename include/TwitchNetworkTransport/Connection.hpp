@@ -87,6 +87,16 @@ namespace TwitchNetworkTransport {
             uint16_t portNumber
         );
 
+        /**
+         * This method is called to configure the adapter with the root
+         * Certificate Authority (CA) certificates to trust, in PEM format.
+         *
+         * @param[in] caCerts
+         *     This is the concatenation of the root Certificate Authority
+         *     (CA) certificates to trust, in PEM format.
+         */
+        void SetCaCerts(const std::string& caCerts);
+
         // Twitch::Connection
     public:
         virtual void SetMessageReceivedDelegate(MessageReceivedDelegate messageReceivedDelegate) override;

@@ -38,7 +38,7 @@ namespace TwitchNetworkTransport {
          * This is the object which is implementing the network
          * connection in terms of the operating system's network APIs.
          */
-        SystemAbstractions::NetworkConnection adaptee;
+        std::shared_ptr< SystemAbstractions::NetworkConnection > adaptee;
 
         /**
          * This is the function to call whenever any message is received
@@ -55,7 +55,13 @@ namespace TwitchNetworkTransport {
         /**
          * This is the object which is providing security for the connection.
          */
-        TlsDecorator::TlsDecorator tls;
+        std::unique_ptr< TlsDecorator::TlsDecorator > tls;
+
+        /**
+         * This is the concatenation of the root Certificate Authority
+         * (CA) certificates to trust, in PEM format.
+         */
+        std::string caCerts;
 
         /**
          * This is the host name or IP address (in string format) of
@@ -107,11 +113,14 @@ namespace TwitchNetworkTransport {
         }
     };
 
-    Connection::~Connection() noexcept = default;
+    Connection::~Connection() noexcept {
+        Disconnect();
+    }
 
     Connection::Connection()
         : impl_(new Impl)
     {
+        impl_->adaptee = std::make_shared< SystemAbstractions::NetworkConnection >();
     }
 
     SystemAbstractions::DiagnosticsSender::UnsubscribeDelegate Connection::SubscribeToDiagnostics(
@@ -129,6 +138,10 @@ namespace TwitchNetworkTransport {
         impl_->portNumber = portNumber;
     }
 
+    void Connection::SetCaCerts(const std::string& caCerts) {
+        impl_->caCerts = caCerts;
+    }
+
     void Connection::SetMessageReceivedDelegate(MessageReceivedDelegate messageReceivedDelegate) {
         impl_->messageReceivedDelegate = messageReceivedDelegate;
     }
@@ -142,29 +155,39 @@ namespace TwitchNetworkTransport {
         if (address == 0) {
             return false;
         }
-        const auto connected = impl_->adaptee.Connect(
+        std::unique_ptr< TlsDecorator::TlsDecorator > tls(new TlsDecorator::TlsDecorator());
+        tls->ConfigureAsClient(
+            impl_->adaptee,
+            impl_->caCerts,
+            impl_->hostNameOrAddress
+        );
+        const auto connected = tls->Connect(
             address,
             impl_->portNumber
         );
         if (!connected) {
             return false;
         }
-        const auto processing = impl_->adaptee.Process(
+        const auto processing = tls->Process(
             std::bind(&Impl::OnMessageReceived, impl_.get(), std::placeholders::_1),
             std::bind(&Impl::OnConnectionBroken, impl_.get())
         );
         if (!processing) {
-            impl_->adaptee.Close();
+            tls->Close();
         }
+        impl_->tls = std::move(tls);
         return processing;
     }
 
     void Connection::Disconnect() {
-        impl_->adaptee.Close(false);
+        if (impl_->tls != nullptr) {
+            impl_->tls->Close(false);
+            impl_->tls.reset(nullptr);
+        }
     }
 
     void Connection::Send(const std::string& message) {
-        impl_->adaptee.SendMessage(
+        impl_->tls->SendMessage(
             std::vector< uint8_t >(
                 message.begin(),
                 message.end()
