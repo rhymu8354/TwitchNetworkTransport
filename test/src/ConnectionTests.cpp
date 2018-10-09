@@ -702,6 +702,10 @@ TEST_F(ConnectionTests, DisconnectWhenNotConnectedShouldNotCrash) {
     connection.Disconnect();
 }
 
+TEST_F(ConnectionTests, SendWhenNotConnectedShouldNotCrash) {
+    connection.Send("HeyGuys");
+}
+
 TEST_F(ConnectionTests, BreakClientSide) {
     (void)connection.Connect();
     ASSERT_TRUE(AwaitConnections(1));

@@ -189,12 +189,14 @@ namespace TwitchNetworkTransport {
     }
 
     void Connection::Send(const std::string& message) {
-        impl_->tls->SendMessage(
-            std::vector< uint8_t >(
-                message.begin(),
-                message.end()
-            )
-        );
+        if (impl_->tls != nullptr) {
+            impl_->tls->SendMessage(
+                std::vector< uint8_t >(
+                    message.begin(),
+                    message.end()
+                )
+            );
+        }
     }
 
 }
