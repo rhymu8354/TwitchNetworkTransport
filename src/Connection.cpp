@@ -121,6 +121,7 @@ namespace TwitchNetworkTransport {
         : impl_(new Impl)
     {
         impl_->adaptee = std::make_shared< SystemAbstractions::NetworkConnection >();
+        impl_->adaptee->SubscribeToDiagnostics(impl_->diagnosticsSender->Chain(), 1);
     }
 
     SystemAbstractions::DiagnosticsSender::UnsubscribeDelegate Connection::SubscribeToDiagnostics(
@@ -156,6 +157,7 @@ namespace TwitchNetworkTransport {
             return false;
         }
         std::unique_ptr< TlsDecorator::TlsDecorator > tls(new TlsDecorator::TlsDecorator());
+        tls->SubscribeToDiagnostics(impl_->diagnosticsSender->Chain(), 1);
         tls->ConfigureAsClient(
             impl_->adaptee,
             impl_->caCerts,
