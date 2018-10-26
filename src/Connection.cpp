@@ -32,7 +32,7 @@ namespace TwitchNetworkTransport {
          * This is a helper object used to generate and publish
          * diagnostic messages.
          */
-        std::shared_ptr< SystemAbstractions::DiagnosticsSender > diagnosticsSender;
+        SystemAbstractions::DiagnosticsSender diagnosticsSender;
 
         /**
          * This is the object which is implementing the network
@@ -80,7 +80,7 @@ namespace TwitchNetworkTransport {
          * This is the constructor for the structure.
          */
         Impl()
-            : diagnosticsSender(std::make_shared< SystemAbstractions::DiagnosticsSender >("Connection"))
+            : diagnosticsSender("Connection")
         {
         }
 
@@ -121,14 +121,14 @@ namespace TwitchNetworkTransport {
         : impl_(new Impl)
     {
         impl_->adaptee = std::make_shared< SystemAbstractions::NetworkConnection >();
-        impl_->adaptee->SubscribeToDiagnostics(impl_->diagnosticsSender->Chain(), 1);
+        impl_->adaptee->SubscribeToDiagnostics(impl_->diagnosticsSender.Chain(), 1);
     }
 
     SystemAbstractions::DiagnosticsSender::UnsubscribeDelegate Connection::SubscribeToDiagnostics(
         SystemAbstractions::DiagnosticsSender::DiagnosticMessageDelegate delegate,
         size_t minLevel
     ) {
-        return impl_->diagnosticsSender->SubscribeToDiagnostics(delegate, minLevel);
+        return impl_->diagnosticsSender.SubscribeToDiagnostics(delegate, minLevel);
     }
 
     void Connection::SetServerInfo(
@@ -157,7 +157,7 @@ namespace TwitchNetworkTransport {
             return false;
         }
         std::unique_ptr< TlsDecorator::TlsDecorator > tls(new TlsDecorator::TlsDecorator());
-        tls->SubscribeToDiagnostics(impl_->diagnosticsSender->Chain(), 1);
+        tls->SubscribeToDiagnostics(impl_->diagnosticsSender.Chain(), 1);
         tls->ConfigureAsClient(
             impl_->adaptee,
             impl_->caCerts,
