@@ -13,8 +13,8 @@
 #include <inttypes.h>
 #include <mutex>
 #include <stdint.h>
+#include <StringExtensions/StringExtensions.hpp>
 #include <SystemAbstractions/NetworkEndpoint.hpp>
-#include <SystemAbstractions/StringExtensions.hpp>
 #include <TlsDecorator/TlsShim.hpp>
 #include <thread>
 #include <vector>
@@ -591,7 +591,7 @@ struct ConnectionTests
                 std::string message
             ){
                 diagnosticMessages.push_back(
-                    SystemAbstractions::sprintf(
+                    StringExtensions::sprintf(
                         "%s[%zu]: %s",
                         senderName.c_str(),
                         level,

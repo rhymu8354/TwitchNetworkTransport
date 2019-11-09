@@ -16,7 +16,6 @@
 #include <string>
 #include <SystemAbstractions/DiagnosticsSender.hpp>
 #include <SystemAbstractions/NetworkConnection.hpp>
-#include <SystemAbstractions/StringExtensions.hpp>
 #include <vector>
 
 namespace TwitchNetworkTransport {
